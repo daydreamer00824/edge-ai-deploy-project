@@ -28,7 +28,7 @@
 | GPU 加速 | CUDA / TensorRT |
 | 工程构建 | CMake / C++17 |
 | 性能评估 | latency / P95 latency / FPS / warmup / repeat |
-| 结果分析 | CSV / matplotlib |
+| 结果分析 | CSV / JSON / matplotlib |
 
 ## 项目亮点
 
@@ -37,7 +37,7 @@
 - 实现 Python ONNX Runtime 单图 / 批量推理与 benchmark。
 - 实现 ONNX Runtime C++ 推理与 benchmark。
 - 实现 Python ORT 与 C++ ORT 输出一致性验证。
-- 使用 `trtexec` 构建 TensorRT FP32 / FP16 engine。
+- 使用 trtexec 基于动态 batch profile 构建 TensorRT FP32 / FP16 engine。
 - 实现 TensorRT C++ Runtime 推理和 benchmark。
 - 统计平均延迟、P95 延迟、最小/最大延迟、FPS。
 - 拆分统计 preprocess / inference / postprocess 三阶段耗时。
@@ -86,7 +86,7 @@ edge_ai_deploy_project/
 │   ├── README.md
 │   └── .gitkeep
 ├── tensorrt/
-│   └── logs/                        # TensorRT 构建与运行日志
+│   └── logs/                        # TensorRT 构建日志
 └── results/
     ├── benchmark/
     │   ├── ort_cpu_benchmark.csv
