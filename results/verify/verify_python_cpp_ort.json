@@ -1,0 +1,50 @@
+{
+    "onnx_model": "model/model.onnx",
+    "image": "input/0013035.jpg",
+    "labels": "labels/imagenet_classes.txt",
+    "cpp_bin": "/home/daydreamer/projects/cpp_onnxruntime_classification/build/verify_cpp_ort",
+    "python_provider": "CPUExecutionProvider",
+    "onnx_input_name": "input",
+    "onnx_output_name": "output",
+    "python_shape": [
+        1,
+        1000
+    ],
+    "cpp_shape": [
+        1,
+        1000
+    ],
+    "max_abs_error": 5.543231964111328e-06,
+    "mean_abs_error": 1.3290382412378676e-06,
+    "python_top5_indices": [
+        310,
+        309,
+        308,
+        316,
+        321
+    ],
+    "cpp_top5_indices": [
+        310,
+        309,
+        308,
+        316,
+        321
+    ],
+    "python_top5_scores": [
+        0.320661336183548,
+        0.26447761058807373,
+        0.14394986629486084,
+        0.0377090722322464,
+        0.03758183866739273
+    ],
+    "cpp_top5_scores": [
+        0.32066112756729126,
+        0.2644774317741394,
+        0.14395031332969666,
+        0.03770904988050461,
+        0.03758186846971512
+    ],
+    "top1_same": true,
+    "top5_same_set": true,
+    "passed": true
+}

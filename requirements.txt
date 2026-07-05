@@ -1,0 +1,10 @@
+--extra-index-url https://download.pytorch.org/whl/cu126
+torch
+torchvision
+onnx
+onnxruntime-gpu
+opencv-python
+numpy
+pyyaml
+pandas
+matplotlib

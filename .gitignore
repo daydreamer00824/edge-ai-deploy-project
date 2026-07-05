@@ -1,0 +1,96 @@
+ld files
+# =========================
+build/
+cpp/build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+
+# =========================
+# Compiled binaries
+# =========================
+cpp_ort_infer
+cpp_ort_benchmark
+cpp_trt_infer
+cpp_trt_benchmark
+verify_cpp_ort
+*.o
+*.so
+*.a
+*.out
+
+# =========================
+# Models and TensorRT engines
+# =========================
+models/*.onnx
+models/*.engine
+models/*.plan
+*.onnx
+*.engine
+*.plan
+*.data
+
+# =========================
+# Large input data
+# =========================
+input/
+data/images/
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# =========================
+# Python cache
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# =========================
+# Logs
+# Ignore all logs by default
+# =========================
+logs/
+*.log
+
+# Keep TensorRT build logs as reproducibility evidence
+!tensorrt/
+!tensorrt/logs/
+!tensorrt/logs/build_fp32.log
+!tensorrt/logs/build_fp16.log
+
+# =========================
+# Temporary outputs
+# =========================
+output/
+output_cpu/
+output_gpu/
+tmp/
+temp/
+
+# =========================
+# IDE
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# Windows / WSL metadata
+# =========================
+*:Zone.Identifier
+
+# =========================
+# Keep placeholders and result evidence
+# =========================
+!models/README.md
+!models/.gitkeep
+!data/README.md
+!data/.gitkeep
+!results/benchmark/*.csv
+!results/verify/*.json
+!results/verify/*.csv
+!results/plots/*.png
