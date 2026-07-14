@@ -1,0 +1,2 @@
+backend,batch_size,warmup,repeat,num_images,total_batches,total_samples,avg_latency_ms,p95_latency_ms,min_latency_ms,max_latency_ms,fps,avg_preprocess_ms,avg_infer_ms,avg_postprocess_ms
+TensorRT_FP32,1,5,50,244,12200,12200,4.308878,4.911756,2.963033,21.282903,232.078957,1.439284,2.861928,0.007667

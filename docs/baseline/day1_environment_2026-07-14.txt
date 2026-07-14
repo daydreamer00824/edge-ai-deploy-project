@@ -1,0 +1,61 @@
+===== Day 1 Baseline Environment =====
+record_time: 2026-07-14T16:47:29+08:00
+
+===== Git =====
+aca0deac34c79d9fa1ebe3bd5c654443da5db5eb
+edge_ai_deploy_project
+?? results/benchmark/day1_ort_cpu_baseline_batch1.csv
+?? results/benchmark/day1_trt_fp16_baseline_batch1.csv
+?? results/benchmark/day1_trt_fp32_baseline_batch1.csv
+
+===== Operating System =====
+PRETTY_NAME="Ubuntu 22.04.5 LTS"
+VERSION_ID="22.04"
+6.18.33.2-microsoft-standard-WSL2
+
+===== Compiler and Build Tools =====
+g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0
+cmake version 3.22.1
+
+===== OpenCV =====
+4.5.4
+
+===== NVIDIA GPU and Driver =====
+NVIDIA GeForce RTX 3060, 566.14, 12288 MiB
+
+===== CUDA Toolkit =====
+Cuda compilation tools, release 12.6, V12.6.85
+
+===== TensorRT Packages =====
+libnvinfer-bin: 10.13.3.9-1+cuda12.9
+libnvinfer-dev-cross-amd64: 
+libnvinfer-dev: 10.13.3.9-1+cuda12.9
+libnvinfer-dispatch-dev-cross-amd64: 
+libnvinfer-dispatch-dev: 10.13.3.9-1+cuda12.9
+libnvinfer-dispatch10: 10.13.3.9-1+cuda12.9
+libnvinfer-doc: 
+libnvinfer-headers-dev: 10.13.3.9-1+cuda12.9
+libnvinfer-headers-plugin-dev: 10.13.3.9-1+cuda12.9
+libnvinfer-headers-python-plugin-dev: 10.13.3.9-1+cuda12.9
+libnvinfer-lean-dev-cross-amd64: 
+libnvinfer-lean-dev: 10.13.3.9-1+cuda12.9
+libnvinfer-lean10: 10.13.3.9-1+cuda12.9
+libnvinfer-plugin-dev-cross-amd64: 
+libnvinfer-plugin-dev: 10.13.3.9-1+cuda12.9
+libnvinfer-plugin10: 10.13.3.9-1+cuda12.9
+libnvinfer-samples: 10.13.3.9-1+cuda12.9
+libnvinfer-vc-plugin-dev-cross-amd64: 
+libnvinfer-vc-plugin-dev: 10.13.3.9-1+cuda12.9
+libnvinfer-vc-plugin10: 10.13.3.9-1+cuda12.9
+libnvinfer-win-builder-resource10: 10.13.3.9-1+cuda12.9
+libnvinfer10: 10.13.3.9-1+cuda12.9
+
+===== ONNX Runtime =====
+/home/daydreamer/third_party/onnxruntime_cpu/lib/libonnxruntime.so.1.23.2
+#define ORT_API_VERSION 23
+
+===== Model and Engine Files =====
+ad3d8f82e5bbc193025fc535d089598e72216e27b53496910732e97d7521221f  /home/daydreamer/projects/python-onnx-demo/model/model.onnx
+30b1aa4bdeba9751b30d868ef749ccb8c7fcb1be491e854eeca3f52369a00267  /home/daydreamer/projects/python-onnx-demo/model/model.onnx.data
+8b9f202aa2709907feadf34f86a9e730a835f9812efe404b51c59fab52277a29  /home/daydreamer/projects/python-onnx-demo/tensorrt/engines/model_fp32.engine
+695239f12825cc358c6c95b72b490c0c8a9f1ceacc88d31e7ae8be89a4e01dfe  /home/daydreamer/projects/python-onnx-demo/tensorrt/engines/model_fp16.engine

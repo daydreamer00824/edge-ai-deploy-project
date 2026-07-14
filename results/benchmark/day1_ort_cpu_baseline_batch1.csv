@@ -1,0 +1,2 @@
+backend,batch_size,warmup,repeat,num_images,total_batches,total_samples,avg_latency_ms,p95_latency_ms,min_latency_ms,max_latency_ms,fps,avg_preprocess_ms,avg_infer_ms,avg_postprocess_ms
+ORT_CPU,1,5,50,244,12200,12200,33.077080,35.600699,29.414826,53.245768,30.232415,1.512661,31.557046,0.007373
