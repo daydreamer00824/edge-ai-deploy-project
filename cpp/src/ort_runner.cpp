@@ -18,7 +18,7 @@ static void print_shape(const std::vector<int64_t>& shape) {
     std::cout << "]";
 }
 
-OrtRunner::OrtRunner(const std::string &model_path):
+OrtRunner::OrtRunner(const std::string &model_path, const std::string &provider):
     env_(ORT_LOGGING_LEVEL_WARNING, "cpp_ort_runner"),
     session_options_(),
     session_(nullptr){
@@ -29,11 +29,42 @@ OrtRunner::OrtRunner(const std::string &model_path):
         session_options_.SetIntraOpNumThreads(1);
         session_options_.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
+        if (provider == "cpu") {
+            std::cout
+                << "[INFO] Requested provider: CPUExecutionProvider"
+                << std::endl;
+        }
+        else if (provider == "cuda") {
+            OrtCUDAProviderOptions cuda_options{};
+            cuda_options.device_id = 0;
+
+            session_options_.AppendExecutionProvider_CUDA(
+                cuda_options
+            );
+
+            std::cout
+                << "[INFO] Requested provider: CUDAExecutionProvider"
+                << std::endl;
+
+            std::cout
+                << "[INFO] CUDA device id: "
+                << cuda_options.device_id
+                << std::endl;
+        }
+        else {
+            throw std::invalid_argument(
+                "Unsupported provider: " + provider +
+                ". Expected 'cpu' or 'cuda'."
+            );
+        }
+
         session_ = std::make_unique<Ort::Session>(
             env_,
             model_path.c_str(),
             session_options_
         );
+
+        std::cout << "[INFO] ONNX Runtime Session created successfully." << std::endl;
 
         Ort::AllocatorWithDefaultOptions allocator;
 

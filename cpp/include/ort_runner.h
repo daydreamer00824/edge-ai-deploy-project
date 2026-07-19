@@ -7,7 +7,7 @@
 
 class OrtRunner{
     public:
-        explicit OrtRunner(const std::string &model_path);
+        explicit OrtRunner(const std::string &model_path, const std::string &provider = "cpu");
         std::vector<float> run(std::vector<float> &input_tensor_values, const std::vector<int64_t> &input_shape);
         void print_model_info();
         const std::string &input_name() const;

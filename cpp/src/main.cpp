@@ -13,11 +13,14 @@
 #include "batch_infer.h"
 
 int main(int argc, char* argv[]){
-    if (argc < 5) {
-        std::cerr << "[ERROR] Usage: "
-                  << argv[0]
-                  << " <model.onnx> <image_path> <labels.txt> <batch_size>"
-                  << std::endl;
+    if (argc != 5 && argc != 7) {
+        std::cerr
+            << "[ERROR] Usage: "
+            << argv[0]
+            << " <model.onnx> <image_path> <labels.txt> <batch_size>"
+            << " [--provider cpu|cuda]"
+            << std::endl;
+
         return 1;
     }
 
@@ -39,6 +42,39 @@ int main(int argc, char* argv[]){
         std::cerr << "[ERROR] batch_size must be > 0." << std::endl;
         return 1;
     }
+
+    std::string provider = "cpu";
+
+    if (argc == 7) {
+        const std::string provider_flag = argv[5];
+
+        if (provider_flag != "--provider") {
+            std::cerr
+                << "[ERROR] Unknown argument: "
+                << provider_flag
+                << ". Expected --provider."
+                << std::endl;
+
+            return 1;
+        }
+
+        provider = argv[6];
+
+        if (provider != "cpu" && provider != "cuda") {
+            std::cerr
+                << "[ERROR] Unsupported provider: "
+                << provider
+                << ". Expected 'cpu' or 'cuda'."
+                << std::endl;
+
+            return 1;
+        }
+    }
+
+    std::cout
+        << "[INFO] Provider argument: "
+        << provider
+        << std::endl;
 
     const int channels = 3;
 
@@ -90,7 +126,7 @@ int main(int argc, char* argv[]){
         std::unique_ptr<OrtRunner> runner;
         {
             scopedTimer t(timer, "session_create");
-            runner = std::make_unique<OrtRunner>(model_path);
+            runner = std::make_unique<OrtRunner>(model_path, provider);
         }
         runner->print_model_info();
 
