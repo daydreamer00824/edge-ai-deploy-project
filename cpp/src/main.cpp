@@ -49,12 +49,7 @@ int main(int argc, char* argv[]){
         const std::string provider_flag = argv[5];
 
         if (provider_flag != "--provider") {
-            std::cerr
-                << "[ERROR] Unknown argument: "
-                << provider_flag
-                << ". Expected --provider."
-                << std::endl;
-
+            std::cerr << "[ERROR] Unknown argument: " << provider_flag << ". Expected --provider." << std::endl;
             return 1;
         }
 

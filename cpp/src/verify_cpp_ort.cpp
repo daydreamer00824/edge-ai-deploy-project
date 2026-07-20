@@ -58,11 +58,14 @@ static void save_topk_csv(
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 5) {
-        std::cerr << "[ERROR] Usage: "
-                  << argv[0]
-                  << " <model.onnx> <image.jpg> <labels.txt> <output_dir>"
-                  << std::endl;
+    if (argc != 5 && argc != 7) {
+        std::cerr
+            << "[ERROR] Usage: "
+            << argv[0]
+            << " <model.onnx> <image.jpg> <labels.txt> <output_dir>"
+            << " [--provider cpu|cuda]"
+            << std::endl;
+
         return 1;
     }
 
@@ -70,6 +73,34 @@ int main(int argc, char* argv[]) {
     const std::string image_path = argv[2];
     const std::string label_path = argv[3];
     const std::filesystem::path output_dir = argv[4];
+
+    std::string provider = "cpu";
+
+    if (argc == 7) {
+        const std::string provider_flag = argv[5];
+
+        if (provider_flag != "--provider") {
+            std::cerr
+                << "[ERROR] Unknown argument: "
+                << provider_flag
+                << ". Expected --provider."
+                << std::endl;
+
+            return 1;
+        }
+
+        provider = argv[6];
+
+        if (provider != "cpu" && provider != "cuda") {
+            std::cerr
+                << "[ERROR] Unsupported provider: "
+                << provider
+                << ". Expected 'cpu' or 'cuda'."
+                << std::endl;
+
+            return 1;
+        }
+    }
 
     try {
         if (!std::filesystem::exists(model_path)) {
@@ -91,6 +122,7 @@ int main(int argc, char* argv[]) {
         std::cout << "[INFO] Image path : " << image_path << std::endl;
         std::cout << "[INFO] Label path : " << label_path << std::endl;
         std::cout << "[INFO] Output dir : " << output_dir.string() << std::endl;
+        std::cout << "[INFO] Provider   : " << provider << std::endl;
 
         imageconfig config;
         config.target_h = 224;
@@ -116,7 +148,7 @@ int main(int argc, char* argv[]) {
                   << "]"
                   << std::endl;
 
-        OrtRunner runner(model_path);
+        OrtRunner runner(model_path, provider);
         runner.print_model_info();
 
         std::vector<float> logits = runner.run(input_tensor, input_shape);

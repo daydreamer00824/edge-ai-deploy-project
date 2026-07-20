@@ -1,0 +1,16 @@
+CPU shape              : (1000,)
+CUDA shape             : (1000,)
+Top-1 same             : True
+CPU Top-1 index        : 310
+CUDA Top-1 index       : 310
+Top-5 indices same     : True
+CPU Top-5 indices      : [310, 309, 308, 316, 321]
+CUDA Top-5 indices     : [310, 309, 308, 316, 321]
+Max absolute error     : 0.0043187142
+Mean absolute error    : 0.0007938737
+Median absolute error  : 0.0006397366
+Elements > 1e-3        : 302
+Elements > 1e-4        : 912
+Largest-error index    : 305
+CPU value at max error : 4.3288235664
+CUDA value at max error: 4.3331422806
