@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <cstddef>
 
 class TrtRunner {
 public:
@@ -20,12 +21,17 @@ public:
         int width
     );
 
+    TrtRunner(const TrtRunner&) = delete;
+    TrtRunner& operator=(const TrtRunner&) = delete;
+
     void print_engine_info() const;
 
 private:
     std::vector<char> load_engine_file(const std::string& engine_path);
-    size_t volume(const nvinfer1::Dims& dims) const;
+    std::size_t volume(const nvinfer1::Dims& dims) const;
     void check_cuda(cudaError_t status, const std::string& message) const;
+    void ensure_device_buffer_capacity(std::size_t input_bytes, std::size_t output_bytes);
+    void release_device_buffers() noexcept;
 
 private:
     std::unique_ptr<nvinfer1::IRuntime> runtime_{nullptr};
@@ -36,4 +42,11 @@ private:
     std::string output_name_;
 
     cudaStream_t stream_ = nullptr;
+
+    void* device_input_ = nullptr;
+    void* device_output_ = nullptr;
+
+    std::size_t device_input_capacity_bytes_ = 0;
+    std::size_t device_output_capacity_bytes_ = 0;
+
 };

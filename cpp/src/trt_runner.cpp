@@ -90,8 +90,18 @@ TrtRunner::TrtRunner(const std::string& engine_path) {
 }
 
 TrtRunner::~TrtRunner() {
+    release_device_buffers();
+
     if (stream_ != nullptr) {
-        cudaStreamDestroy(stream_);
+        const cudaError_t status = cudaStreamDestroy(stream_);
+
+        if (status != cudaSuccess) {
+            std::cerr
+                << "[WARN] Failed to destroy CUDA stream. CUDA error: "
+                << cudaGetErrorString(status)
+                << std::endl;
+        }
+
         stream_ = nullptr;
     }
 }
@@ -122,7 +132,7 @@ std::vector<char> TrtRunner::load_engine_file(const std::string& engine_path) {
     return data;
 }
 
-size_t TrtRunner::volume(const nvinfer1::Dims& dims) const {
+std::size_t TrtRunner::volume(const nvinfer1::Dims& dims) const {
     size_t result = 1;
 
     for (int i = 0; i < dims.nbDims; ++i) {
@@ -143,6 +153,123 @@ void TrtRunner::check_cuda(cudaError_t status, const std::string& message) const
         throw std::runtime_error(
             message + " CUDA error: " + cudaGetErrorString(status)
         );
+    }
+}
+
+void TrtRunner::release_device_buffers() noexcept {
+    if (device_input_ != nullptr) {
+        const cudaError_t status = cudaFree(device_input_);
+
+        if (status != cudaSuccess) {
+            std::cerr
+                << "[WARN] Failed to free input device buffer. CUDA error: "
+                << cudaGetErrorString(status)
+                << std::endl;
+        }
+    }
+
+    device_input_ = nullptr;
+    device_input_capacity_bytes_ = 0;
+
+    if (device_output_ != nullptr) {
+        const cudaError_t status = cudaFree(device_output_);
+
+        if (status != cudaSuccess) {
+            std::cerr
+                << "[WARN] Failed to free output device buffer. CUDA error: "
+                << cudaGetErrorString(status)
+                << std::endl;
+        }
+    }
+
+    device_output_ = nullptr;
+    device_output_capacity_bytes_ = 0;
+}
+
+void TrtRunner::ensure_device_buffer_capacity(
+    std::size_t input_bytes,
+    std::size_t output_bytes
+) {
+    if (input_bytes == 0 || output_bytes == 0) {
+        throw std::runtime_error(
+            "TensorRT device buffer size must be greater than 0."
+        );
+    }
+
+    if (input_bytes > device_input_capacity_bytes_) {
+        void* new_device_input = nullptr;
+
+        check_cuda(
+            cudaMalloc(&new_device_input, input_bytes),
+            "Failed to allocate input device buffer."
+        );
+
+        if (device_input_ != nullptr) {
+            const cudaError_t free_status = cudaFree(device_input_);
+
+            if (free_status != cudaSuccess) {
+                cudaFree(new_device_input);
+
+                throw std::runtime_error(
+                    std::string(
+                        "Failed to free old input device buffer. CUDA error: "
+                    ) +
+                    cudaGetErrorString(free_status)
+                );
+            }
+        }
+
+        const std::size_t old_capacity =
+            device_input_capacity_bytes_;
+
+        device_input_ = new_device_input;
+        device_input_capacity_bytes_ = input_bytes;
+
+        std::cout
+            << "[TRT] Input device buffer capacity: "
+            << old_capacity
+            << " -> "
+            << device_input_capacity_bytes_
+            << " bytes"
+            << std::endl;
+    }
+
+    if (output_bytes > device_output_capacity_bytes_) {
+        void* new_device_output = nullptr;
+
+        check_cuda(
+            cudaMalloc(&new_device_output, output_bytes),
+            "Failed to allocate output device buffer."
+        );
+
+        if (device_output_ != nullptr) {
+            const cudaError_t free_status = cudaFree(device_output_);
+
+            if (free_status != cudaSuccess) {
+                cudaFree(new_device_output);
+
+                throw std::runtime_error(
+                    std::string(
+                        "Failed to free old output device buffer. CUDA error: "
+                    ) +
+                    cudaGetErrorString(free_status)
+                );
+            }
+        }
+
+        const std::size_t old_capacity =
+            device_output_capacity_bytes_;
+
+        device_output_ = new_device_output;
+        device_output_capacity_bytes_ = output_bytes;
+
+        std::cout
+            << "[TRT] Output device buffer capacity: "
+            << old_capacity
+            << " -> "
+            << device_output_capacity_bytes_
+            << " bytes"
+            << std::endl;
     }
 }
 
@@ -181,8 +308,8 @@ std::vector<float> TrtRunner::run(
     nvinfer1::Dims actual_output_dims =
         context_->getTensorShape(output_name_.c_str());
 
-    const size_t input_count = volume(actual_input_dims);
-    const size_t output_count = volume(actual_output_dims);
+    const std::size_t input_count = volume(actual_input_dims);
+    const std::size_t output_count = volume(actual_output_dims);
 
     if (input_tensor_values.size() != input_count) {
         throw std::runtime_error(
@@ -193,27 +320,16 @@ std::vector<float> TrtRunner::run(
         );
     }
 
-    const size_t input_bytes = input_count * sizeof(float);
-    const size_t output_bytes = output_count * sizeof(float);
+    const std::size_t input_bytes = input_count * sizeof(float);
+    const std::size_t output_bytes = output_count * sizeof(float);
 
-    void* device_input = nullptr;
-    void* device_output = nullptr;
-
-    check_cuda(
-        cudaMalloc(&device_input, input_bytes),
-        "Failed to allocate input device buffer."
-    );
-
-    check_cuda(
-        cudaMalloc(&device_output, output_bytes),
-        "Failed to allocate output device buffer."
-    );
+    ensure_device_buffer_capacity(input_bytes, output_bytes);
 
     std::vector<float> output_tensor(output_count);
 
     check_cuda(
         cudaMemcpyAsync(
-            device_input,
+            device_input_,
             input_tensor_values.data(),
             input_bytes,
             cudaMemcpyHostToDevice,
@@ -224,34 +340,28 @@ std::vector<float> TrtRunner::run(
 
     bool set_input_ok = context_->setTensorAddress(
         input_name_.c_str(),
-        device_input
+        device_input_
     );
 
     bool set_output_ok = context_->setTensorAddress(
         output_name_.c_str(),
-        device_output
+        device_output_
     );
 
     if (!set_input_ok || !set_output_ok) {
-        cudaFree(device_input);
-        cudaFree(device_output);
-
         throw std::runtime_error("Failed to set TensorRT tensor address.");
     }
 
     bool enqueue_ok = context_->enqueueV3(stream_);
 
     if (!enqueue_ok) {
-        cudaFree(device_input);
-        cudaFree(device_output);
-
         throw std::runtime_error("TensorRT enqueueV3 failed.");
     }
 
     check_cuda(
         cudaMemcpyAsync(
             output_tensor.data(),
-            device_output,
+            device_output_,
             output_bytes,
             cudaMemcpyDeviceToHost,
             stream_
@@ -263,9 +373,6 @@ std::vector<float> TrtRunner::run(
         cudaStreamSynchronize(stream_),
         "Failed to synchronize CUDA stream."
     );
-
-    cudaFree(device_input);
-    cudaFree(device_output);
 
     return output_tensor;
 }

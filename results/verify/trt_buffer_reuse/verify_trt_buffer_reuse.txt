@@ -1,0 +1,37 @@
+========== TensorRT Buffer Reuse Verify ==========
+[INFO] Engine path    : /home/daydreamer/projects/python-onnx-demo/tensorrt/engines/model_fp16.engine
+[INFO] Image dir      : /home/daydreamer/projects/python-onnx-demo/input
+[INFO] Images found   : 244
+[INFO] Batch sequence : 32 -> 1 -> 8 -> 32
+
+---------- Step 1 | Batch 32 ----------
+[TRT] Input device buffer capacity: 0 -> 19267584 bytes
+[TRT] Output device buffer capacity: 0 -> 128000 bytes
+[RESULT] Output shape: [32, 1000]
+[RESULT] All values finite: true
+[RESULT] First image Top-5: [310, 309, 308, 316, 321]
+[RESULT] Baseline Top-5 saved.
+
+---------- Step 2 | Batch 1 ----------
+[RESULT] Output shape: [1, 1000]
+[RESULT] All values finite: true
+[RESULT] First image Top-5: [310, 309, 308, 316, 321]
+[RESULT] Top-1 matches baseline: true
+[RESULT] Top-5 matches baseline: true
+
+---------- Step 3 | Batch 8 ----------
+[RESULT] Output shape: [8, 1000]
+[RESULT] All values finite: true
+[RESULT] First image Top-5: [310, 309, 308, 316, 321]
+[RESULT] Top-1 matches baseline: true
+[RESULT] Top-5 matches baseline: true
+
+---------- Step 4 | Batch 32 ----------
+[RESULT] Output shape: [32, 1000]
+[RESULT] All values finite: true
+[RESULT] First image Top-5: [310, 309, 308, 316, 321]
+[RESULT] Top-1 matches baseline: true
+[RESULT] Top-5 matches baseline: true
+
+[PASS] TensorRT dynamic batch and device buffer reuse verification passed.
+[PASS] Expected allocation behavior: one input expansion and one output expansion.

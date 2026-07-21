@@ -86,7 +86,12 @@ add_executable(verify_ort_cpu_cuda_batch
         src/batch_infer.cpp
 )
 
-foreach(target cpp_ort_infer cpp_ort_benchmark verify_cpp_ort verify_ort_cpu_cuda_batch)
+foreach(target
+        cpp_ort_infer
+        cpp_ort_benchmark
+        verify_cpp_ort
+        verify_ort_cpu_cuda_batch
+)
     target_include_directories(${target} PRIVATE
             ${CMAKE_SOURCE_DIR}/include
             ${ORT_INCLUDE_DIR}
@@ -105,7 +110,7 @@ foreach(target cpp_ort_infer cpp_ort_benchmark verify_cpp_ort verify_ort_cpu_cud
 endforeach()
 
 # =========================
-# TensorRT executable
+# TensorRT executables
 # =========================
 add_executable(cpp_trt_infer
         src/trt_infer_main.cpp
@@ -115,23 +120,6 @@ add_executable(cpp_trt_infer
         src/postprocess.cpp
         src/label_map.cpp
         src/batch_infer.cpp
-)
-
-target_include_directories(cpp_trt_infer PRIVATE
-        ${CMAKE_SOURCE_DIR}/include
-        ${TRT_INCLUDE_DIR}
-        ${OpenCV_INCLUDE_DIRS}
-)
-
-target_link_libraries(cpp_trt_infer PRIVATE
-        ${OpenCV_LIBS}
-        ${TRT_NVINFER_LIB}
-        CUDA::cudart
-)
-
-set_target_properties(cpp_trt_infer PROPERTIES
-        BUILD_RPATH ${TRT_LIB_DIR}
-        INSTALL_RPATH ${TRT_LIB_DIR}
 )
 
 add_executable(cpp_trt_benchmark
@@ -145,19 +133,32 @@ add_executable(cpp_trt_benchmark
         src/batch_infer.cpp
 )
 
-target_include_directories(cpp_trt_benchmark PRIVATE
-        ${CMAKE_SOURCE_DIR}/include
-        ${TRT_INCLUDE_DIR}
-        ${OpenCV_INCLUDE_DIRS}
+add_executable(verify_trt_buffer_reuse
+        src/verify_trt_buffer_reuse.cpp
+        src/trt_runner.cpp
+        src/image_process.cpp
+        src/batch_infer.cpp
 )
 
-target_link_libraries(cpp_trt_benchmark PRIVATE
-        ${OpenCV_LIBS}
-        ${TRT_NVINFER_LIB}
-        CUDA::cudart
+foreach(target
+        cpp_trt_infer
+        cpp_trt_benchmark
+        verify_trt_buffer_reuse
 )
+    target_include_directories(${target} PRIVATE
+            ${CMAKE_SOURCE_DIR}/include
+            ${TRT_INCLUDE_DIR}
+            ${OpenCV_INCLUDE_DIRS}
+    )
 
-set_target_properties(cpp_trt_benchmark PROPERTIES
-        BUILD_RPATH ${TRT_LIB_DIR}
-        INSTALL_RPATH ${TRT_LIB_DIR}
-)
+    target_link_libraries(${target} PRIVATE
+            ${OpenCV_LIBS}
+            ${TRT_NVINFER_LIB}
+            CUDA::cudart
+    )
+
+    set_target_properties(${target} PROPERTIES
+            BUILD_RPATH ${TRT_LIB_DIR}
+            INSTALL_RPATH ${TRT_LIB_DIR}
+    )
+endforeach()
