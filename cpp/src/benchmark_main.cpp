@@ -29,15 +29,24 @@ static int parse_int_arg(const char* value, const std::string& name) {
 }
 
 static void print_usage(const char* program_name) {
-    std::cerr << "[ERROR] Usage: "
-              << program_name
-              << " <model.onnx> <image_dir> <labels.txt> <batch_size> <warmup> <repeat> <csv_output>"
-              << std::endl;
+    std::cerr
+        << "[ERROR] Usage: "
+        << program_name
+        << " <model.onnx> <image_dir> <labels.txt>"
+        << " <batch_size> <warmup> <repeat> <csv_output>"
+        << " [--provider cpu|cuda]"
+        << std::endl;
 
-    std::cerr << "[EXAMPLE] "
-              << program_name
-              << " ../models/resnet18.onnx ../data/images ../data/labels.txt 8 5 50 ../results/benchmark_ort_cpp.csv"
-              << std::endl;
+    std::cerr
+        << "[EXAMPLE] "
+        << program_name
+        << " ../models/resnet18.onnx"
+        << " ../data/images"
+        << " ../data/labels.txt"
+        << " 8 5 10"
+        << " ../results/four_backend_benchmark.csv"
+        << " --provider cuda"
+        << std::endl;
 }
 
 static void run_one_batch(
@@ -178,7 +187,7 @@ static void run_one_batch(
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 8) {
+    if (argc != 8 && argc != 10) {
         print_usage(argv[0]);
         return 1;
     }
@@ -193,6 +202,30 @@ int main(int argc, char* argv[]) {
         const int repeat = parse_int_arg(argv[6], "repeat");
 
         const std::string csv_output_path = argv[7];
+
+        std::string provider = "cpu";
+
+        if (argc == 10) {
+            const std::string provider_flag = argv[8];
+
+            if (provider_flag != "--provider") {
+                throw std::invalid_argument(
+                    "Unknown argument: " +
+                    provider_flag +
+                    ". Expected --provider."
+                );
+            }
+
+            provider = argv[9];
+
+            if (provider != "cpu" && provider != "cuda") {
+                throw std::invalid_argument(
+                    "Unsupported provider: " +
+                    provider +
+                    ". Expected 'cpu' or 'cuda'."
+                );
+            }
+        }
 
         if (batch_size <= 0) {
             throw std::invalid_argument(
@@ -212,7 +245,7 @@ int main(int argc, char* argv[]) {
             );
         }
 
-        const std::string backend = "ORT_CPU";
+        const std::string backend = provider == "cpu" ? "ORT_CPU" : "ORT_CUDA";
 
         imageconfig preprocess_config;
         preprocess_config.target_h = 224;
@@ -255,6 +288,10 @@ int main(int argc, char* argv[]) {
 
         std::cout << "[INFO] CSV output: "
                   << csv_output_path
+                  << std::endl;
+
+        std::cout << "[INFO] Provider: "
+                  << provider
                   << std::endl;
 
         Timerecorder init_timer;
@@ -308,7 +345,7 @@ int main(int argc, char* argv[]) {
         {
             scopedTimer t(init_timer, "session_create");
 
-            runner = std::make_unique<OrtRunner>(model_path);
+            runner = std::make_unique<OrtRunner>(model_path, provider);
         }
 
         std::cout << "[INFO] Session created | cost: "
