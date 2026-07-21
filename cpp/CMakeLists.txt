@@ -79,7 +79,14 @@ add_executable(verify_cpp_ort
         src/ort_runner.cpp
 )
 
-foreach(target cpp_ort_infer cpp_ort_benchmark verify_cpp_ort)
+add_executable(verify_ort_cpu_cuda_batch
+        src/verify_ort_cpu_cuda_batch.cpp
+        src/image_process.cpp
+        src/ort_runner.cpp
+        src/batch_infer.cpp
+)
+
+foreach(target cpp_ort_infer cpp_ort_benchmark verify_cpp_ort verify_ort_cpu_cuda_batch)
     target_include_directories(${target} PRIVATE
             ${CMAKE_SOURCE_DIR}/include
             ${ORT_INCLUDE_DIR}
