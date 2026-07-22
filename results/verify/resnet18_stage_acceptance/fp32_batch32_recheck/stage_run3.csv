@@ -1,0 +1,2 @@
+backend,batch_size,warmup,repeat,num_images,total_batches,total_samples,avg_latency_ms,p95_latency_ms,min_latency_ms,max_latency_ms,fps,avg_preprocess_ms,avg_trt_run_wall_ms,avg_postprocess_ms,avg_h2d_ms,avg_gpu_inference_ms,avg_d2h_ms,avg_gpu_total_ms,avg_gpu_stage_sum_ms,wall_minus_gpu_total_ms
+TensorRT_FP32_Batch32_Acceptance_Run3,32,5,30,244,240,7320,107.272724,136.576952,63.613700,143.443809,284.322044,76.177734,30.218774,0.876215,1.899119,28.018061,0.202464,30.119644,30.119644,0.099130

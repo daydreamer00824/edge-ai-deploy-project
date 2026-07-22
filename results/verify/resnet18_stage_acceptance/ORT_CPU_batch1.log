@@ -1,0 +1,64 @@
+[INFO] C++ ONNX Runtime benchmark started.
+[INFO] Backend: ORT_CPU
+[INFO] OpenCV version: 4.5.4
+[INFO] Model path: /home/daydreamer/projects/python-onnx-demo/model/model.onnx
+[INFO] Image dir: /home/daydreamer/projects/python-onnx-demo/input
+[INFO] Label path: /home/daydreamer/projects/edge_ai_deploy_project/labels/imagenet_classes.txt
+[INFO] Batch size: 1
+[INFO] Warmup: 3
+[INFO] Repeat: 10
+[INFO] CSV output: /home/daydreamer/projects/edge_ai_deploy_project/results/verify/resnet18_stage_acceptance/four_backend_recheck.csv
+[INFO] Provider: cpu
+[INFO] Labels loaded: 1000 | cost: 0.8016 ms
+[INFO] Images found: 244 | cost: 2.3271 ms
+[INFO] Requested provider: CPUExecutionProvider
+[INFO] ONNX Runtime Session created successfully.
+[INFO] Session created | cost: 56.9751 ms
+[INFO] Input name: input
+[INFO] Output name: output
+[INFO] Model input shape: [-1, 3, 224, 224]
+[INFO] Model output shape: [-1, 1000]
+
+========== Warmup ==========
+[WARMUP] 1/3 finished
+[WARMUP] 2/3 finished
+[WARMUP] 3/3 finished
+
+========== Repeat Benchmark ==========
+[REPEAT] 1/10 finished
+[REPEAT] 2/10 finished
+[REPEAT] 3/10 finished
+[REPEAT] 4/10 finished
+[REPEAT] 5/10 finished
+[REPEAT] 6/10 finished
+[REPEAT] 7/10 finished
+[REPEAT] 8/10 finished
+[REPEAT] 9/10 finished
+[REPEAT] 10/10 finished
+
+========== Benchmark Summary ==========
+[BENCHMARK] backend: ORT_CPU
+[BENCHMARK] batch_size: 1
+[BENCHMARK] warmup: 3
+[BENCHMARK] repeat: 10
+[BENCHMARK] num_images: 244
+[BENCHMARK] total_batches: 2440
+[BENCHMARK] total_samples: 2440
+[BENCHMARK] avg_latency_ms: 34.8796 ms
+[BENCHMARK] p95_latency_ms: 36.8308 ms
+[BENCHMARK] min_latency_ms: 32.5089 ms
+[BENCHMARK] max_latency_ms: 48.8562 ms
+[BENCHMARK] fps: 28.6700
+[BENCHMARK] avg_preprocess_ms: 2.5338 ms
+[BENCHMARK] avg_infer_ms: 32.3083 ms
+[BENCHMARK] avg_postprocess_ms: 0.0375 ms
+[BENCHMARK] avg_trt_run_wall_ms: 0.0000 ms
+[BENCHMARK] avg_h2d_ms: 0.0000 ms
+[BENCHMARK] avg_gpu_inference_ms: 0.0000 ms
+[BENCHMARK] avg_d2h_ms: 0.0000 ms
+[BENCHMARK] avg_gpu_total_ms: 0.0000 ms
+[BENCHMARK] avg_gpu_stage_sum_ms: 0.0000 ms
+[BENCHMARK] gpu_total_minus_stage_sum_ms: 0.0000 ms
+[BENCHMARK] wall_minus_gpu_total_ms: 0.0000 ms
+[INFO] Benchmark CSV saved to: /home/daydreamer/projects/edge_ai_deploy_project/results/verify/resnet18_stage_acceptance/four_backend_recheck.csv
+[INFO] C++ ONNX Runtime benchmark finished.
