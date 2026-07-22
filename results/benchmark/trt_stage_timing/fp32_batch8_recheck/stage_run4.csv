@@ -1,0 +1,2 @@
+backend,batch_size,warmup,repeat,num_images,total_batches,total_samples,avg_latency_ms,p95_latency_ms,min_latency_ms,max_latency_ms,fps,avg_preprocess_ms,avg_trt_run_wall_ms,avg_postprocess_ms,avg_h2d_ms,avg_gpu_inference_ms,avg_d2h_ms,avg_gpu_total_ms,avg_gpu_stage_sum_ms,wall_minus_gpu_total_ms
+TensorRT_FP32_Batch8_Recheck_Run4,8,5,30,244,930,7320,29.394220,38.099405,9.717780,52.304087,267.772633,19.693617,9.453243,0.247361,0.486555,8.549486,0.155408,9.191449,9.191449,0.261794
