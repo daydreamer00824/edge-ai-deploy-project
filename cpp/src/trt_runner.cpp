@@ -83,13 +83,28 @@ TrtRunner::TrtRunner(const std::string& engine_path) {
         throw std::runtime_error("Only FP32 output tensor is supported in this demo.");
     }
 
-    check_cuda(
-        cudaStreamCreate(&stream_),
-        "Failed to create CUDA stream."
-    );
+    try {
+        check_cuda(
+            cudaStreamCreate(&stream_),
+            "Failed to create CUDA stream."
+        );
+
+        create_timing_events();
+    }
+    catch (...) {
+        release_timing_events();
+
+        if (stream_ != nullptr) {
+            cudaStreamDestroy(stream_);
+            stream_ = nullptr;
+        }
+
+        throw;
+    }
 }
 
 TrtRunner::~TrtRunner() {
+    release_timing_events();
     release_device_buffers();
 
     if (stream_ != nullptr) {
@@ -154,6 +169,64 @@ void TrtRunner::check_cuda(cudaError_t status, const std::string& message) const
             message + " CUDA error: " + cudaGetErrorString(status)
         );
     }
+}
+
+void TrtRunner::create_timing_events() {
+    try {
+        check_cuda(
+            cudaEventCreate(&event_start_),
+            "Failed to create CUDA start event."
+        );
+
+        check_cuda(
+            cudaEventCreate(&event_h2d_end_),
+            "Failed to create CUDA H2D-end event."
+        );
+
+        check_cuda(
+            cudaEventCreate(&event_inference_end_),
+            "Failed to create CUDA inference-end event."
+        );
+
+        check_cuda(
+            cudaEventCreate(&event_d2h_end_),
+            "Failed to create CUDA D2H-end event."
+        );
+    }
+    catch (...) {
+        // 构造过程中只创建了一部分Event时，避免已创建的Event泄漏
+        release_timing_events();
+        throw;
+    }
+}
+
+void TrtRunner::release_timing_events() noexcept {
+    auto destroy_event = [](
+        cudaEvent_t& event,
+        const char* event_name
+    ) noexcept {
+        if (event == nullptr) {
+            return;
+        }
+
+        const cudaError_t status = cudaEventDestroy(event);
+
+        if (status != cudaSuccess) {
+            std::cerr
+                << "[WARN] Failed to destroy "
+                << event_name
+                << ". CUDA error: "
+                << cudaGetErrorString(status)
+                << std::endl;
+        }
+
+        event = nullptr;
+    };
+
+    destroy_event(event_start_, "event_start");
+    destroy_event(event_h2d_end_, "event_h2d_end");
+    destroy_event(event_inference_end_, "event_inference_end");
+    destroy_event(event_d2h_end_, "event_d2h_end");
 }
 
 void TrtRunner::release_device_buffers() noexcept {
@@ -278,7 +351,8 @@ std::vector<float> TrtRunner::run(
     int batch_size,
     int channels,
     int height,
-    int width
+    int width,
+    TrtStageTiming* timing
 ) {
     if (batch_size <= 0) {
         throw std::runtime_error("batch_size must be greater than 0.");
@@ -325,18 +399,11 @@ std::vector<float> TrtRunner::run(
 
     ensure_device_buffer_capacity(input_bytes, output_bytes);
 
-    std::vector<float> output_tensor(output_count);
+    if (timing != nullptr) {
+        *timing = TrtStageTiming{};
+    }
 
-    check_cuda(
-        cudaMemcpyAsync(
-            device_input_,
-            input_tensor_values.data(),
-            input_bytes,
-            cudaMemcpyHostToDevice,
-            stream_
-        ),
-        "Failed to copy input from host to device."
-    );
+    std::vector<float> output_tensor(output_count);
 
     bool set_input_ok = context_->setTensorAddress(
         input_name_.c_str(),
@@ -352,10 +419,42 @@ std::vector<float> TrtRunner::run(
         throw std::runtime_error("Failed to set TensorRT tensor address.");
     }
 
+    if (timing != nullptr) {
+        check_cuda(
+            cudaEventRecord(event_start_, stream_),
+            "Failed to record CUDA start event."
+        );
+    }
+
+    check_cuda(
+        cudaMemcpyAsync(
+            device_input_,
+            input_tensor_values.data(),
+            input_bytes,
+            cudaMemcpyHostToDevice,
+            stream_
+        ),
+        "Failed to copy input from host to device."
+    );
+
+    if (timing != nullptr) {
+        check_cuda(
+            cudaEventRecord(event_h2d_end_, stream_),
+            "Failed to record CUDA H2D-end event."
+        );
+    }
+
     bool enqueue_ok = context_->enqueueV3(stream_);
 
     if (!enqueue_ok) {
         throw std::runtime_error("TensorRT enqueueV3 failed.");
+    }
+
+    if (timing != nullptr) {
+        check_cuda(
+            cudaEventRecord(event_inference_end_, stream_),
+            "Failed to record CUDA inference-end event."
+        );
     }
 
     check_cuda(
@@ -369,10 +468,55 @@ std::vector<float> TrtRunner::run(
         "Failed to copy output from device to host."
     );
 
+    if (timing != nullptr) {
+        check_cuda(
+            cudaEventRecord(event_d2h_end_, stream_),
+            "Failed to record CUDA D2H-end event."
+        );
+    }
+
     check_cuda(
         cudaStreamSynchronize(stream_),
         "Failed to synchronize CUDA stream."
     );
+
+    if (timing != nullptr) {
+    check_cuda(
+        cudaEventElapsedTime(
+            &timing->h2d_ms,
+            event_start_,
+            event_h2d_end_
+        ),
+        "Failed to calculate CUDA H2D elapsed time."
+    );
+
+    check_cuda(
+        cudaEventElapsedTime(
+            &timing->inference_ms,
+            event_h2d_end_,
+            event_inference_end_
+        ),
+        "Failed to calculate CUDA inference elapsed time."
+    );
+
+    check_cuda(
+        cudaEventElapsedTime(
+            &timing->d2h_ms,
+            event_inference_end_,
+            event_d2h_end_
+        ),
+        "Failed to calculate CUDA D2H elapsed time."
+    );
+
+    check_cuda(
+        cudaEventElapsedTime(
+            &timing->gpu_total_ms,
+            event_start_,
+            event_d2h_end_
+        ),
+        "Failed to calculate CUDA total elapsed time."
+    );
+}
 
     return output_tensor;
 }

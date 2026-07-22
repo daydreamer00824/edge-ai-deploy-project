@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include <opencv2/opencv.hpp>
 
@@ -30,13 +31,9 @@ static int parse_int_arg(const char* value, const std::string& name) {
 static void print_usage(const char* program_name) {
     std::cerr << "[ERROR] Usage: "
               << program_name
-              << " <model.engine> <image_dir> <labels.txt> <batch_size> <warmup> <repeat> <backend> <csv_output>"
+              << " <model.engine> <image_dir> <labels.txt> <batch_size> <warmup> <repeat> <backend> <csv_output> [stage_timing_csv]"
               << std::endl;
 
-    std::cerr << "[EXAMPLE] "
-              << program_name
-              << " ../models/resnet18_fp16.engine ../data/images ../labels/imagenet_classes.txt 8 5 50 TensorRT_FP16 ../results/trt_benchmark_summary.csv"
-              << std::endl;
 }
 
 static void run_one_batch(
@@ -96,6 +93,8 @@ static void run_one_batch(
 
     std::vector<float> batch_logits;
 
+    TrtStageTiming stage_timing;
+
     {
         scopedTimer t(batch_timer, "infer");
 
@@ -105,9 +104,47 @@ static void run_one_batch(
                 current_batch_size,
                 channels,
                 preprocess_config.target_h,
-                preprocess_config.target_w
+                preprocess_config.target_w,
+                &stage_timing
             );
     }
+
+    auto validate_stage_time = [](
+    float value,
+    const std::string& field_name
+    ) {
+        if (!std::isfinite(value)) {
+            throw std::runtime_error(
+                field_name + " is not finite."
+            );
+        }
+
+        if (value < 0.0F) {
+            throw std::runtime_error(
+                field_name + " must not be negative."
+            );
+        }
+    };
+
+    validate_stage_time(
+        stage_timing.h2d_ms,
+        "TensorRT H2D time"
+    );
+
+    validate_stage_time(
+        stage_timing.inference_ms,
+        "TensorRT GPU inference time"
+    );
+
+    validate_stage_time(
+        stage_timing.d2h_ms,
+        "TensorRT D2H time"
+    );
+
+    validate_stage_time(
+        stage_timing.gpu_total_ms,
+        "TensorRT GPU total time"
+    );
 
     if (batch_logits.empty()) {
         throw std::runtime_error(
@@ -161,6 +198,22 @@ static void run_one_batch(
 
         r.preprocess_ms = batch_timer.get("preprocess");
         r.infer_ms = batch_timer.get("infer");
+        // 明确记录TensorRT完整run()的CPU侧墙钟时间
+        r.trt_run_wall_ms = r.infer_ms;
+
+        // CUDA Event阶段时间
+        r.h2d_ms =
+            static_cast<double>(stage_timing.h2d_ms);
+
+        r.gpu_inference_ms =
+            static_cast<double>(stage_timing.inference_ms);
+
+        r.d2h_ms =
+            static_cast<double>(stage_timing.d2h_ms);
+
+        r.gpu_total_ms =
+            static_cast<double>(stage_timing.gpu_total_ms);
+
         r.postprocess_ms = batch_timer.get("postprocess");
 
         r.end_to_end_ms =
@@ -168,12 +221,36 @@ static void run_one_batch(
             r.infer_ms +
             r.postprocess_ms;
 
+        if (repeat_index == 1 && batch_index == 1) {
+            const double stage_sum_ms =
+                r.h2d_ms +
+                r.gpu_inference_ms +
+                r.d2h_ms;
+
+            std::cout
+                << std::fixed
+                << std::setprecision(6)
+                << "[TRT TIMING] trt_run_wall_ms="
+                << r.trt_run_wall_ms
+                << " | h2d_ms="
+                << r.h2d_ms
+                << " | gpu_inference_ms="
+                << r.gpu_inference_ms
+                << " | d2h_ms="
+                << r.d2h_ms
+                << " | gpu_total_ms="
+                << r.gpu_total_ms
+                << " | stage_sum_ms="
+                << stage_sum_ms
+                << std::endl;
+        }
+
         records.push_back(r);
     }
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 9) {
+    if (argc != 9 && argc != 10) {
         print_usage(argv[0]);
         return 1;
     }
@@ -189,6 +266,19 @@ int main(int argc, char* argv[]) {
 
         const std::string backend = argv[7];
         const std::string csv_output_path = argv[8];
+
+        std::string stage_timing_csv_path;
+
+        if (argc == 10) {
+            stage_timing_csv_path = argv[9];
+        }
+
+        if (!stage_timing_csv_path.empty()) {
+            std::cout
+                << "[INFO] Stage timing CSV output: "
+                << stage_timing_csv_path
+                << std::endl;
+        }
 
         if (batch_size <= 0) {
             throw std::invalid_argument(
@@ -403,6 +493,18 @@ int main(int argc, char* argv[]) {
             csv_output_path,
             summary
         );
+
+        if (!stage_timing_csv_path.empty()) {
+            append_trt_stage_timing_csv(
+                stage_timing_csv_path,
+                summary
+            );
+
+            std::cout
+                << "[INFO] TensorRT stage timing CSV saved to: "
+                << stage_timing_csv_path
+                << std::endl;
+        }
 
         std::cout << "[INFO] TensorRT benchmark CSV saved to: "
                   << csv_output_path

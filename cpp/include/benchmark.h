@@ -3,13 +3,25 @@
 #include <vector>
 
 
-struct batchBenchmarkrecord{
+struct batchBenchmarkrecord {
     int repeat_index = 0;
     int batch_index = 0;
     int current_batch_size = 0;
 
     double preprocess_ms = 0.0;
+
+    // 原字段保留，避免破坏ORT benchmark和旧统计逻辑
     double infer_ms = 0.0;
+
+    // TensorRT完整run()的CPU墙钟时间
+    double trt_run_wall_ms = 0.0;
+
+    // CUDA Event统计的GPU阶段时间
+    double h2d_ms = 0.0;
+    double gpu_inference_ms = 0.0;
+    double d2h_ms = 0.0;
+    double gpu_total_ms = 0.0;
+
     double postprocess_ms = 0.0;
     double end_to_end_ms = 0.0;
 };
@@ -33,6 +45,13 @@ struct benchmarkSummary{
     double avg_preprocess_ms = 0.0;
     double avg_infer_ms = 0.0;
     double avg_postprocess_ms = 0.0;
+
+    // TensorRT阶段计时
+    double avg_trt_run_wall_ms = 0.0;
+    double avg_h2d_ms = 0.0;
+    double avg_gpu_inference_ms = 0.0;
+    double avg_d2h_ms = 0.0;
+    double avg_gpu_total_ms = 0.0;
 };
 
 benchmarkSummary summarize_benchmark(
@@ -47,3 +66,5 @@ benchmarkSummary summarize_benchmark(
 void print_benchmark_summary(const benchmarkSummary& summary);
 
 void append_benchmark_csv(const std::string& csv_path, const benchmarkSummary& summary);
+
+void append_trt_stage_timing_csv(const std::string& csv_path, const benchmarkSummary& summary);
