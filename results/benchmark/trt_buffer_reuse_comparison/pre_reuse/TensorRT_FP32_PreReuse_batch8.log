@@ -1,0 +1,66 @@
+[INFO] Stage timing CSV output: /home/daydreamer/projects/edge_ai_deploy_project_pre_reuse/results/benchmark/trt_stage_timing_pre_reuse/trt_stage_timing_pre_reuse.csv
+[INFO] TensorRT C++ benchmark started.
+[INFO] Backend: TensorRT_FP32_PreReuse
+[INFO] OpenCV version: 4.5.4
+[INFO] Engine path: /home/daydreamer/projects/python-onnx-demo/tensorrt/engines/model_fp32.engine
+[INFO] Image dir: /home/daydreamer/projects/python-onnx-demo/input
+[INFO] Label path: /home/daydreamer/projects/edge_ai_deploy_project_pre_reuse/labels/imagenet_classes.txt
+[INFO] Batch size: 8
+[INFO] Warmup: 3
+[INFO] Repeat: 10
+[INFO] CSV output: /home/daydreamer/projects/edge_ai_deploy_project_pre_reuse/results/benchmark/trt_stage_timing_pre_reuse/trt_stage_timing_pre_reuse_common.csv
+[INFO] Labels loaded: 1000 | cost: 0.1190 ms
+[INFO] Images found: 244 | cost: 0.4475 ms
+[INFO] TensorRT engine loaded | cost: 158.7357 ms
+========== TensorRT Engine Info ==========
+[TRT] Number of IO tensors: 2
+[TRT] Input name : input
+[TRT] Output name: output
+[TRT] Tensor 0 | name=input | mode=INPUT | dims=[-1, 3, 224, 224]
+[TRT] Tensor 1 | name=output | mode=OUTPUT | dims=[-1, 1000]
+
+========== TensorRT Warmup ==========
+[WARMUP] 1/3 finished
+[WARMUP] 2/3 finished
+[WARMUP] 3/3 finished
+
+========== TensorRT Repeat Benchmark ==========
+[TRT TIMING] trt_run_wall_ms=5.235229 | h2d_ms=0.385792 | gpu_inference_ms=3.917088 | d2h_ms=0.055008 | gpu_total_ms=4.357888 | stage_sum_ms=4.357888
+[REPEAT] 1/10 finished
+[REPEAT] 2/10 finished
+[REPEAT] 3/10 finished
+[REPEAT] 4/10 finished
+[REPEAT] 5/10 finished
+[REPEAT] 6/10 finished
+[REPEAT] 7/10 finished
+[REPEAT] 8/10 finished
+[REPEAT] 9/10 finished
+[REPEAT] 10/10 finished
+
+========== Benchmark Summary ==========
+[BENCHMARK] backend: TensorRT_FP32_PreReuse
+[BENCHMARK] batch_size: 8
+[BENCHMARK] warmup: 3
+[BENCHMARK] repeat: 10
+[BENCHMARK] num_images: 244
+[BENCHMARK] total_batches: 310
+[BENCHMARK] total_samples: 2440
+[BENCHMARK] avg_latency_ms: 27.9049 ms
+[BENCHMARK] p95_latency_ms: 37.6886 ms
+[BENCHMARK] min_latency_ms: 10.1247 ms
+[BENCHMARK] max_latency_ms: 45.3951 ms
+[BENCHMARK] fps: 282.0643
+[BENCHMARK] avg_preprocess_ms: 19.6681 ms
+[BENCHMARK] avg_infer_ms: 7.9888 ms
+[BENCHMARK] avg_postprocess_ms: 0.2479 ms
+[BENCHMARK] avg_trt_run_wall_ms: 7.9888 ms
+[BENCHMARK] avg_h2d_ms: 0.4255 ms
+[BENCHMARK] avg_gpu_inference_ms: 6.4617 ms
+[BENCHMARK] avg_d2h_ms: 0.1177 ms
+[BENCHMARK] avg_gpu_total_ms: 7.0048 ms
+[BENCHMARK] avg_gpu_stage_sum_ms: 7.0048 ms
+[BENCHMARK] gpu_total_minus_stage_sum_ms: -0.0000 ms
+[BENCHMARK] wall_minus_gpu_total_ms: 0.9840 ms
+[INFO] TensorRT stage timing CSV saved to: /home/daydreamer/projects/edge_ai_deploy_project_pre_reuse/results/benchmark/trt_stage_timing_pre_reuse/trt_stage_timing_pre_reuse.csv
+[INFO] TensorRT benchmark CSV saved to: /home/daydreamer/projects/edge_ai_deploy_project_pre_reuse/results/benchmark/trt_stage_timing_pre_reuse/trt_stage_timing_pre_reuse_common.csv
+[INFO] TensorRT C++ benchmark finished.
